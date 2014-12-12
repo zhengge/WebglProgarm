@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>立方体交互</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+
+		<script src="libs/three.js"></script>
+		<script src="libs/Stats.js"></script>
+
+		<script>
+
+			var container, stats;
+
+			var camera, scene, directionalLight, ambientLight,renderer;
+
+			var cylinder;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+			var info = document.createElement( 'div' );
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				//添加标题
+
+				info.style.position = 'absolute';
+				info.style.top = '10px';
+				info.style.width = '100%';
+				info.style.textAlign = 'center';
+				info.innerHTML = '立方体交互';
+				container.appendChild( info );
+
+				//初始化相机
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.y = 0;
+				camera.position.z = 600;
+
+				//初始化场景
+				scene = new THREE.Scene();
+
+				//初始化光源
+				directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+				directionalLight.position.set( 200, 0, 200 );
+				scene.add( directionalLight );
+
+				ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+				scene.add( ambientLight );
+
+				//初始化对象
+				var geometry = new THREE.BoxGeometry( 100,100,100);
+				for ( var i = 0; i < geometry.faces.length; i += 2 ) {
+
+					var hex = Math.random() * 0xffffff;
+					geometry.faces[ i ].color.setHex( hex );
+					geometry.faces[ i + 1 ].color.setHex( hex );
+
+				}
+
+				var material = new THREE.MeshLambertMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5 } );
+
+				cylinder = new THREE.Mesh( geometry,material);
+				cylinder.position.x = 0;
+				cylinder.position.y = 0;
+				cylinder.position.z = 0;
+				scene.add(cylinder);
+
+				//初始化渲染器
+				renderer = new THREE.WebGLRenderer();
+				renderer.setClearColor(0xF0F0F0, 1.0);
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.appendChild( renderer.domElement );
+
+				//初始化运行状态
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				//其他初始化
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				document.onmousedown = handleMouseDown;
+				document.onmouseup = handleMouseUp;
+				document.onmousemove = handleMouseMove;
+				//document.onmousewheel =handleMouseWheel;
+				document.addEventListener('DOMMouseScroll',handleMouseWheel,false);
+				//鼠标滚轮需将火狐与其他浏览器分开
+				if(document.addEventListener){
+					document.addEventListener('DOMMouseScroll',handleMouseWheel,false);
+				}//W3C
+				document.onmousewheel=handleMouseWheel;//IE/Opera/Chrome
+			}
+
+			var distanceFromwindowHalfX=0;
+			var distanceFromwindowHalfY=0;
+			var distancecubeZ=0;
+			//
+			function handleMouseDown(event){
+				alert("MouseDown");
+			}
+
+			function handleMouseUp(event){
+				alert("MouseUp");
+			}
+
+			function handleMouseMove(event){
+				//alert("MouseMove");
+				distanceFromwindowHalfX=event.clientX-windowHalfX;
+				distanceFromwindowHalfY=event.clientY-windowHalfY;
+			}
+
+			function handleMouseWheel(event){
+				var delta = 0;
+				if (!event) event = window.event;
+				if (event.wheelDelta) {//IE/Opera/Chrome
+					delta = event.wheelDelta/120;
+				} else if (event.detail) {//Firefox
+					delta = event.detail/3;
+				}
+				if(delta>0){
+					distancecubeZ +=10;
+				}
+				else if(delta<0){
+					distancecubeZ -=10;
+				}
+				event.returnValue = false;
+
+			}
+			//窗口大小变化后重新初始化
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			//动画
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				cylinder.rotation.x = distanceFromwindowHalfY/100; // Rotate the mesh by a small amount about the x- and y-axes.
+				cylinder.rotation.y = distanceFromwindowHalfX/200;
+				cylinder.position.z = distancecubeZ;
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
+</html>
